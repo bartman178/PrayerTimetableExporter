@@ -15,6 +15,8 @@
       --page-bg: #f2f4f7;
       --white: #ffffff;
       --text: #111111;
+      --target-width: 1600px;
+      --target-height: 1200px;
     }
 
     * {
@@ -81,24 +83,24 @@
     }
 
     /*
-      This is the part that becomes the PNG.
-      Controls and status messages are intentionally outside this area,
-      so they will not appear in the exported image.
+      This is the part captured for the PNG.
+      It is transparent, so there is no white border/background around the table.
+      Small transparent padding is kept so the table shadow is not clipped.
     */
     #export-area {
-      width: 1800px;
-      background: var(--white);
+      width: var(--target-width);
+      background: transparent;
       margin: 0 auto;
-      padding: 40px;
-      border-radius: 6px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.12);
+      padding: 28px;
+      border-radius: 0;
+      box-shadow: none;
     }
 
     #weekly-prayer-table {
       width: 100%;
     }
 
-    /* Heading hidden by default so it is not included in the screenshot */
+    /* Heading hidden so it is not included in the screenshot */
     #weekly-prayer-table h2 {
       display: none;
     }
@@ -107,11 +109,13 @@
       width: 100%;
       border-collapse: separate;
       border-spacing: 0;
-      font-size: 2.6em;
+      font-size: 2.25em;
       background-color: var(--white);
-      border-radius: 12px;
+      border-radius: 18px;
       overflow: hidden;
-      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+      box-shadow:
+        0 14px 34px rgba(0, 0, 0, 0.20),
+        0 4px 12px rgba(0, 0, 0, 0.12);
     }
 
     #weekly-prayer-table thead tr {
@@ -124,7 +128,7 @@
 
     #weekly-prayer-table th,
     #weekly-prayer-table td {
-      padding: 24px 12px;
+      padding: 28px 10px;
       text-align: center;
       border-bottom: 1px solid #dddddd;
       border-right: 1px solid #000000;
@@ -151,11 +155,11 @@
       border-right: none;
     }
 
-    @media (max-width: 1900px) {
+    @media (max-width: 1700px) {
       #export-area {
-        transform: scale(0.55);
+        transform: scale(0.62);
         transform-origin: top center;
-        margin-bottom: -360px;
+        margin-bottom: -350px;
       }
     }
 
@@ -174,8 +178,8 @@
       }
 
       #export-area {
-        transform: scale(0.45);
-        margin-bottom: -470px;
+        transform: scale(0.42);
+        margin-bottom: -520px;
       }
     }
 
@@ -220,6 +224,8 @@
   <script>
     const sheetID = "1AunLHACQEUcIeIrcwXafAEpVn1dq39gLGJVIyL8QzV0";
     const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=Sheet1`;
+    const outputWidth = 1600;
+    const outputHeight = 1200;
 
     function parseLocalDate(dateText) {
       const parts = dateText.split("-");
@@ -376,9 +382,9 @@
           throw new Error("html2canvas did not load. Check your internet connection or CDN access.");
         }
 
-        status.textContent = "Generating PNG...";
+        status.textContent = "Generating 1600 x 1200 PNG...";
 
-        // Temporarily remove preview scaling so the exported PNG uses the real full-size layout.
+        // Temporarily remove preview scaling so the capture uses the real full-size layout.
         const previousTransform = exportArea.style.transform;
         const previousMarginBottom = exportArea.style.marginBottom;
         exportArea.style.transform = "none";
@@ -386,9 +392,10 @@
 
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        const canvas = await html2canvas(exportArea, {
-          backgroundColor: "#ffffff",
-          scale: 4,
+        // Capture the transparent wrapper so the table shadow is preserved without a white border.
+        const capturedCanvas = await html2canvas(exportArea, {
+          backgroundColor: null,
+          scale: 1,
           useCORS: true,
           logging: false
         });
@@ -396,14 +403,35 @@
         exportArea.style.transform = previousTransform;
         exportArea.style.marginBottom = previousMarginBottom;
 
+        // Create a consistent output size of roughly 1600 x 1200 without stretching the table.
+        const finalCanvas = document.createElement("canvas");
+        finalCanvas.width = outputWidth;
+        finalCanvas.height = outputHeight;
+
+        const ctx = finalCanvas.getContext("2d");
+        ctx.clearRect(0, 0, outputWidth, outputHeight);
+
+        const fitScale = Math.min(
+          outputWidth / capturedCanvas.width,
+          outputHeight / capturedCanvas.height,
+          1
+        );
+
+        const drawWidth = Math.round(capturedCanvas.width * fitScale);
+        const drawHeight = Math.round(capturedCanvas.height * fitScale);
+        const x = Math.round((outputWidth - drawWidth) / 2);
+        const y = Math.round((outputHeight - drawHeight) / 2);
+
+        ctx.drawImage(capturedCanvas, x, y, drawWidth, drawHeight);
+
         const link = document.createElement("a");
         link.download = `tawa-prayer-times-${selectedDateText}.png`;
-        link.href = canvas.toDataURL("image/png");
+        link.href = finalCanvas.toDataURL("image/png");
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
 
-        status.textContent = `Downloaded PNG for ${selectedDateText}.`;
+        status.textContent = `Downloaded 1600 x 1200 PNG for ${selectedDateText}.`;
       } catch (error) {
         console.error(error);
         status.textContent = "Failed to generate PNG. Open the browser console for details.";
