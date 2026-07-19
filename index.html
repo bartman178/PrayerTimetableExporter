@@ -15,8 +15,7 @@
       --page-bg: #f2f4f7;
       --white: #ffffff;
       --black: #000000;
-      --text: #111111;
-      --weekly-width: 1500px;
+      --weekly-width: 850px;
       --jamaat-width: 1060px;
     }
 
@@ -26,8 +25,9 @@
 
     body {
       background: var(--page-bg);
-      color: var(--text);
-      font-family: Arial, Helvetica, sans-serif;
+      color: var(--black);
+      font-family: Arial, sans-serif;
+      font-weight: bold;
       margin: 0;
       padding: 24px;
     }
@@ -36,6 +36,7 @@
       max-width: 1100px;
       margin: 0 auto 16px auto;
       text-align: center;
+      font-weight: normal;
     }
 
     .app-header h1 {
@@ -43,12 +44,13 @@
       color: var(--blue-dark);
       font-size: 32px;
       line-height: 1.2;
+      font-weight: bold;
     }
 
     .app-header p {
       margin: 0;
       color: #333333;
-      font-weight: 600;
+      font-weight: normal;
     }
 
     .controls {
@@ -63,13 +65,14 @@
       align-items: center;
       justify-content: center;
       flex-wrap: wrap;
+      font-weight: normal;
     }
 
     .view-button,
     .action-button {
       padding: 11px 18px;
       font-size: 1rem;
-      font-weight: 800;
+      font-weight: bold;
       border: none;
       border-radius: 8px;
       cursor: pointer;
@@ -108,7 +111,7 @@
 
     .date-controls label {
       font-size: 1rem;
-      font-weight: 800;
+      font-weight: bold;
       color: var(--blue-dark);
     }
 
@@ -126,7 +129,7 @@
       margin: 0 auto 16px auto;
       text-align: center;
       color: var(--blue-dark);
-      font-weight: 800;
+      font-weight: bold;
     }
 
     .view {
@@ -137,18 +140,22 @@
       display: block;
     }
 
-    /* Weekly timetable styles */
+    /* Weekly timetable styles copied closely from the original display page */
     #weekly-export-area {
       width: var(--weekly-width);
       background: transparent;
       margin: 0 auto;
       padding: 0;
-      border-radius: 0;
       box-shadow: none;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
     }
 
     #weekly-prayer-table {
       width: 100%;
+      position: relative;
+      top: 0;
+      left: 0;
     }
 
     #weekly-prayer-table h2 {
@@ -159,31 +166,30 @@
       width: 100%;
       border-collapse: separate;
       border-spacing: 0;
-      font-size: 2.25em;
+      font-size: 1.8em;
       background-color: var(--white);
-      border-radius: 18px;
+      border-radius: 12px;
       overflow: hidden;
-      box-shadow:
-        0 10px 30px rgba(0, 0, 0, 0.18),
-        0 4px 10px rgba(0, 0, 0, 0.10);
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+      font-weight: bold;
     }
 
     #weekly-prayer-table thead tr {
       background-color: var(--blue-main);
       color: var(--white);
-      font-weight: 800;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
     }
 
     #weekly-prayer-table th,
     #weekly-prayer-table td {
-      padding: 28px 10px;
+      padding: 18px 8px;
       text-align: center;
       border-bottom: 1px solid #dddddd;
       border-right: 1px solid var(--black);
-      line-height: 1.15;
-      font-weight: 800;
+      line-height: normal;
+      font-weight: bold;
     }
 
     #weekly-prayer-table tbody tr:last-child td {
@@ -193,7 +199,7 @@
     #weekly-prayer-table tbody tr.highlight-row {
       background-color: var(--blue-dark);
       color: var(--white);
-      font-weight: 800;
+      font-weight: bold;
     }
 
     #weekly-prayer-table th:first-child,
@@ -206,12 +212,14 @@
       border-right: none;
     }
 
-    /* Daily Jamaat styles */
+    /* Daily Jamaat styles matched to the supplied screenshot, using normal bold rather than extra-heavy weights */
     #jamaat-export-card {
       width: var(--jamaat-width);
       margin: 0 auto;
       background: var(--white);
       padding: 0 0 16px 0;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
     }
 
     .jamaat-heading {
@@ -220,7 +228,7 @@
       text-align: center;
       font-size: 38px;
       line-height: 1.1;
-      font-weight: 800;
+      font-weight: bold;
       letter-spacing: 0.5px;
       color: var(--black);
     }
@@ -232,13 +240,14 @@
       table-layout: fixed;
       border: 2px solid var(--black);
       background: var(--white);
+      font-weight: bold;
     }
 
     .jamaat-table td {
       border: 2px solid var(--black);
       text-align: center;
       vertical-align: middle;
-      font-weight: 800;
+      font-weight: bold;
     }
 
     .prayer-name {
@@ -246,6 +255,7 @@
       font-size: 68px;
       line-height: 1;
       letter-spacing: 0.5px;
+      font-weight: bold;
     }
 
     .time-details {
@@ -253,6 +263,7 @@
       font-size: 52px;
       line-height: 1.28;
       padding: 14px 20px;
+      font-weight: bold;
     }
 
     .row-tall .prayer-name,
@@ -283,11 +294,11 @@
       color: var(--teal);
     }
 
-    @media (max-width: 1600px) {
+    @media (max-width: 980px) {
       #weekly-export-area {
-        transform: scale(0.62);
+        transform: scale(0.9);
         transform-origin: top center;
-        margin-bottom: -350px;
+        margin-bottom: -40px;
       }
     }
 
@@ -299,7 +310,7 @@
       }
     }
 
-    @media (max-width: 900px) {
+    @media (max-width: 760px) {
       body {
         padding: 12px;
       }
@@ -321,7 +332,8 @@
 
       #weekly-export-area {
         transform: scale(0.42);
-        margin-bottom: -520px;
+        transform-origin: top center;
+        margin-bottom: -260px;
       }
 
       #jamaat-export-card {
@@ -496,33 +508,23 @@
 
       try {
         const res = await fetch(sheetUrl);
-
-        if (!res.ok) {
-          throw new Error(`Google Sheet request failed: ${res.status}`);
-        }
+        if (!res.ok) throw new Error(`Google Sheet request failed: ${res.status}`);
 
         const text = await res.text();
         const jsonStart = text.indexOf("{");
         const jsonEnd = text.lastIndexOf("}");
+        if (jsonStart === -1 || jsonEnd === -1) throw new Error("Could not parse Google Sheet response.");
 
-        if (jsonStart === -1 || jsonEnd === -1) {
-          throw new Error("Could not parse Google Sheet response.");
-        }
-
-        const jsonText = text.substring(jsonStart, jsonEnd + 1);
-        const json = JSON.parse(jsonText);
+        const json = JSON.parse(text.substring(jsonStart, jsonEnd + 1));
         const rows = json.table.rows || [];
 
         const parsedRows = rows
           .map(row => {
             const dateCell = row.c[0];
             if (!dateCell) return null;
-
             const dateStr = dateCell.f || dateCell.v;
             const date = parseSheetDate(dateStr);
-
             if (isNaN(date.getTime())) return null;
-
             return {
               date,
               dateStr,
@@ -541,7 +543,6 @@
         }
 
         const table = document.createElement("table");
-
         const thead = document.createElement("thead");
         thead.innerHTML = `
           <tr>
@@ -556,28 +557,22 @@
         `;
 
         const tbody = document.createElement("tbody");
-
         next7.forEach(row => {
           const tr = document.createElement("tr");
-
           if (dateOnly(row.date).getTime() === selectedDate.getTime()) {
             tr.classList.add("highlight-row");
           }
-
           tr.innerHTML = `
             <td>${formatDisplayDate(row.date)}</td>
             ${row.times.map(time => `<td>${time}</td>`).join("")}
           `;
-
           tbody.appendChild(tr);
         });
 
         table.appendChild(thead);
         table.appendChild(tbody);
-
         container.innerHTML = "";
         container.appendChild(table);
-
         status.textContent = `Generated weekly timetable from ${selectedDateText}.`;
       } catch (error) {
         console.error(error);
@@ -596,19 +591,20 @@
 
         let target;
         let fileName;
+        let backgroundColor;
 
         if (currentView === "weekly") {
           const selectedDateText = document.getElementById("start-date").value || "selected-date";
           target = document.querySelector("#weekly-prayer-table table");
           fileName = `tawa-prayer-times-${selectedDateText}.png`;
+          backgroundColor = null;
         } else {
           target = document.getElementById("jamaat-export-card");
           fileName = "daily-jamaat-times.png";
+          backgroundColor = "#ffffff";
         }
 
-        if (!target) {
-          throw new Error("No export target found.");
-        }
+        if (!target) throw new Error("No export target found.");
 
         status.textContent = "Generating PNG...";
 
@@ -620,7 +616,7 @@
         await new Promise(resolve => setTimeout(resolve, 100));
 
         const canvas = await html2canvas(target, {
-          backgroundColor: currentView === "weekly" ? null : "#ffffff",
+          backgroundColor,
           scale: 2,
           useCORS: true,
           logging: false
@@ -650,11 +646,7 @@
 
       const params = new URLSearchParams(window.location.search);
       const view = params.get("view");
-      if (view === "jamaat") {
-        showView("jamaat");
-      } else {
-        showView("weekly");
-      }
+      showView(view === "jamaat" ? "jamaat" : "weekly");
 
       document.getElementById("weekly-view-button").addEventListener("click", () => showView("weekly"));
       document.getElementById("jamaat-view-button").addEventListener("click", () => showView("jamaat"));
