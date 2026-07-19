@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tawa Prayer Timetable Exporter</title>
+
+  https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.jsscript>
+
+  <style>
+    body {
+      background: #f2f4f7;
+      color: #111;
+      font-family: Arial, sans-serif;
+      font-weight: bold;
+      margin: 0;
+      padding: 24px;
+      box-sizing: border-box;
+    }
+
+    .controls {
+      max-width: 900px;
+      margin: 0 auto 20px auto;
+      background: white;
+      padding: 18px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.08);
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .controls label {
+      font-size: 1rem;
+      color: #003366;
+    }
+
+    .controls input {
+      padding: 10px 12px;
+      font-size: 1rem;
+      border: 1px solid #bbb;
+      border-radius: 8px;
+    }
+
+    .controls button {
+      padding: 11px 18px;
+      font-size: 1rem;
+      font-weight: bold;
+      background: #007a99;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .controls button:hover {
+      background: #005f78;
+    }
+
+    #export-area {
+      width: 850px;
+      background: white;
+      margin: 0 auto;
+      padding: 20px;
+      box-sizing: border-box;
+      border-radius: 3px;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.12);
+    }
+
+    #weekly-prayer-table {
+      position: relative;
+      top: 0;
+      left: 0;
+    }
+
+    #weekly-prayer-table h2 {
+      text-align: center;
+      color: #003366;
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-size: 2em;
+    }
+
+    #weekly-prayer-table table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 1.8em;
+      background-color: #fff;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+    }
+
+    #weekly-prayer-table thead tr {
+      background-color: #007a99;
+      color: white;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    #weekly-prayer-table th,
+    #weekly-prayer-table td {
+      padding: 18px 8px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+      border-right: 1px solid black;
+    }
+
+    #weekly-prayer-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    #weekly-prayer-table tbody tr.highlight-row {
+      background-color: #003366;
+      color: white;
+      font-weight: bold;
+    }
+
+    #weekly-prayer-table th:first-child,
+    #weekly-prayer-table td:first-child {
+      border-left: none;
+    }
+
+    #weekly-prayer-table th:last-child,
+    #weekly-prayer-table td:last-child {
+      border-right: none;
+    }
+
+    .status {
+      max-width: 900px;
+      margin: 12px auto;
+      text-align: center;
+      color: #003366;
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+
+      .controls,
+      .status {
+        display: none;
+      }
+
+      #export-area {
+        box-shadow: none;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="controls">
+    <label for="start-date">Start date:</label>
+    <input type="date" id="start-date" />
+
+    <button onclick="loadWeeklyPrayerTimes()">Generate</button>
+    <button onclick="downloadPng()">Download PNG</button>
+  </div>
+
+  <div id="export-area">
+    <div id="weekly-prayer-table">
+      <h2>Prayer Times for the Next 7 Days</h2>
+      <div id="prayer-table-placeholder">Loading weekly prayer times...</div>
+    </div>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <script>
+    const sheetID = "1AunLHACQEUcIeIrcwXafAEpVn1dq39gLGJVIyL8QzV0";
+    const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=Sheet1`;
+
+    function parseLocalDate(dateText) {
+      const parts = dateText.split("-");
+      return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    }
+
+    function parseSheetDate(value) {
+      const parts = value.split("/");
+      return new Date(Number(parts[2]), Number(parts[0]) - 1, Number(parts[1]));
+    }
+
+    function formatDisplayDate(date) {
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      return `${day}/${month}`;
+    }
+
+    function formatTime(cell) {
+      const fullTime = cell?.f || cell?.v || "";
+      return String(fullTime).split(":").slice(0, 2).join(":");
+    }
+
+    function setDefaultDateFromUrlOrToday() {
+      const params = new URLSearchParams(window.location.search);
+      const urlDate = params.get("date");
+
+      const input = document.getElementById("start-date");
+
+      if (urlDate) {
+        input.value = urlDate;
+      } else {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, "0");
+        const dd = String(today.getDate()).padStart(2, "0");
+        input.value = `${yyyy}-${mm}-${dd}`;
+      }
+    }
+
+    async function loadWeeklyPrayerTimes() {
+      const status = document.getElementById("status");
+      const container = document.getElementById("prayer-table-placeholder");
+      const selectedDateText = document.getElementById("start-date").value;
+
+      if (!selectedDateText) {
+        status.textContent = "Please select a start date.";
+        return;
+      }
+
+      const selectedDate = parseLocalDate(selectedDateText);
+      const selectedDateOnly = new Date(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate()
+      );
+
+      status.textContent = "Loading prayer times...";
+      container.textContent = "Loading weekly prayer times...";
+
+      try {
+        const res = await fetch(sheetUrl);
+        const text = await res.text();
+
+        const json = JSON.parse(text.substr(47).slice(0, -2));
+        const rows = json.table.rows;
+
+        const parsedRows = rows
+          .map(row => {
+            const dateCell = row.c[0];
+            if (!dateCell) return null;
+
+            const dateStr = dateCell.f || dateCell.v;
+            const date = parseSheetDate(dateStr);
+
+            return {
+              date,
+              dateStr,
+              times: row.c.slice(1, 7).map(formatTime)
+            };
+          })
+          .filter(row => {
+            if (!row) return false;
+
+            const rowDateOnly = new Date(
+              row.date.getFullYear(),
+              row.date.getMonth(),
+              row.date.getDate()
+            );
+
+            return rowDateOnly >= selectedDateOnly;
+          });
+
+        const next7 = parsedRows.slice(0, 7);
+
+        if (next7.length === 0) {
+          container.textContent = "No prayer times found for that date.";
+          status.textContent = "";
+          return;
+        }
+
+        const table = document.createElement("table");
+
+        const thead = document.createElement("thead");
+        thead.innerHTML = `
+          <tr>
+            <th>Date</th>
+            <th>Fajr</th>
+            <th>Sunrise</th>
+            <th>Dhuhr</th>
+            <th>Asr</th>
+            <th>Maghrib</th>
+            <th>Isha</th>
+          </tr>
+        `;
+
+        const tbody = document.createElement("tbody");
+
+        next7.forEach(row => {
+          const tr = document.createElement("tr");
+
+          if (row.date.toDateString() === selectedDateOnly.toDateString()) {
+            tr.classList.add("highlight-row");
+          }
+
+          tr.innerHTML = `
+            <td>${formatDisplayDate(row.date)}</td>
+            ${row.times.map(time => `<td>${time}</td>`).join("")}
+          `;
+
+          tbody.appendChild(tr);
+        });
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+
+        container.innerHTML = "";
+        container.appendChild(table);
+
+        status.textContent = `Generated timetable from ${selectedDateText}.`;
+      } catch (error) {
+        console.error(error);
+        container.textContent = "Failed to load weekly data.";
+        status.textContent = "Check that the Google Sheet is publicly accessible.";
+      }
+    }
+
+    async function downloadPng() {
+      const selectedDateText = document.getElementById("start-date").value;
+      const exportArea = document.getElementById("export-area");
+
+      const canvas = await html2canvas(exportArea, {
+        backgroundColor: "#ffffff",
+        scale: 2
+      });
+
+      const link = document.createElement("a");
+      link.download = `tawa-prayer-times-${selectedDateText}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    }
+
+    window.onload = function () {
+      setDefaultDateFromUrlOrToday();
+      loadWeeklyPrayerTimes();
+    };
+  </script>
+</body>
+</html>
