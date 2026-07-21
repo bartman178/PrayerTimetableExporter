@@ -4,24 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tawa Prayer Exporter</title>
-
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-
   <style>
     :root {
       --blue-dark: #003366;
       --blue-main: #007a99;
-      --teal: #087f96;
       --page-bg: #f2f4f7;
       --white: #ffffff;
       --black: #000000;
       --weekly-width: 850px;
-      --jamaat-width: 1060px;
+      --doc-width: 850px;
+      --doc-height: 720px;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       background: var(--page-bg);
@@ -76,27 +72,17 @@
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .view-button {
-      background: #e8eef2;
-      color: var(--blue-dark);
-    }
-
-    .view-button.active {
-      background: var(--blue-main);
-      color: var(--white);
-    }
-
-    .action-button {
-      background: var(--blue-main);
-      color: var(--white);
-    }
-
-    .action-button:hover,
-    .view-button:hover {
-      filter: brightness(0.92);
-    }
+    .view-button { background: #e8eef2; color: var(--blue-dark); }
+    .view-button.active { background: var(--blue-main); color: var(--white); }
+    .action-button { background: var(--blue-main); color: var(--white); }
+    .secondary-button { background: #e8eef2; color: var(--blue-dark); }
+    .action-button:hover, .view-button:hover { filter: brightness(0.92); }
 
     .date-controls {
       display: flex;
@@ -105,9 +91,9 @@
       flex-wrap: wrap;
     }
 
-    .date-controls.hidden {
-      display: none;
-    }
+    .date-controls.hidden,
+    .jamaat-actions.hidden,
+    #download-button.hidden { display: none; }
 
     .date-controls label {
       font-size: 1rem;
@@ -132,13 +118,8 @@
       font-weight: bold;
     }
 
-    .view {
-      display: none;
-    }
-
-    .view.active {
-      display: block;
-    }
+    .view { display: none; }
+    .view.active { display: block; }
 
     /* Weekly timetable styles copied closely from the original display page */
     #weekly-export-area {
@@ -158,9 +139,7 @@
       left: 0;
     }
 
-    #weekly-prayer-table h2 {
-      display: none;
-    }
+    #weekly-prayer-table h2 { display: none; }
 
     #weekly-prayer-table table {
       width: 100%;
@@ -192,154 +171,58 @@
       font-weight: bold;
     }
 
-    #weekly-prayer-table tbody tr:last-child td {
-      border-bottom: none;
-    }
+    #weekly-prayer-table tbody tr:last-child td { border-bottom: none; }
+    #weekly-prayer-table tbody tr.highlight-row { background-color: var(--blue-dark); color: var(--white); font-weight: bold; }
+    #weekly-prayer-table th:first-child, #weekly-prayer-table td:first-child { border-left: none; }
+    #weekly-prayer-table th:last-child, #weekly-prayer-table td:last-child { border-right: none; }
 
-    #weekly-prayer-table tbody tr.highlight-row {
-      background-color: var(--blue-dark);
-      color: var(--white);
-      font-weight: bold;
-    }
-
-    #weekly-prayer-table th:first-child,
-    #weekly-prayer-table td:first-child {
-      border-left: none;
-    }
-
-    #weekly-prayer-table th:last-child,
-    #weekly-prayer-table td:last-child {
-      border-right: none;
-    }
-
-    /* Daily Jamaat styles matched to the supplied screenshot, using normal bold rather than extra-heavy weights */
-    #jamaat-export-card {
-      width: var(--jamaat-width);
+    /* Live Google Doc Jamaat view */
+    #jamaat-doc-card {
+      width: var(--doc-width);
+      height: var(--doc-height);
       margin: 0 auto;
       background: var(--white);
-      padding: 0 0 16px 0;
-      font-family: Arial, sans-serif;
-      font-weight: bold;
+      border-radius: 3px;
+      overflow: hidden;
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
     }
 
-    .jamaat-heading {
-      margin: 0 0 24px 0;
-      padding-top: 4px;
-      text-align: center;
-      font-size: 38px;
-      line-height: 1.1;
-      font-weight: bold;
-      letter-spacing: 0.5px;
-      color: var(--black);
-    }
-
-    .jamaat-table {
-      width: 1032px;
-      margin: 0 auto;
-      border-collapse: collapse;
-      table-layout: fixed;
-      border: 2px solid var(--black);
+    #jamaat-doc-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
       background: var(--white);
-      font-weight: bold;
     }
 
-    .jamaat-table td {
-      border: 2px solid var(--black);
-      text-align: center;
-      vertical-align: middle;
-      font-weight: bold;
-    }
-
-    .prayer-name {
-      width: 332px;
-      font-size: 68px;
-      line-height: 1;
-      letter-spacing: 0.5px;
-      font-weight: bold;
-    }
-
-    .time-details {
-      width: 700px;
-      font-size: 52px;
-      line-height: 1.28;
-      padding: 14px 20px;
-      font-weight: bold;
-    }
-
-    .row-tall .prayer-name,
-    .row-tall .time-details {
-      height: 142px;
-    }
-
-    .row-short .prayer-name,
-    .row-short .time-details {
-      height: 72px;
-    }
-
-    .name-teal {
-      background: var(--teal);
-      color: var(--white);
-    }
-
-    .name-white {
-      background: var(--white);
-      color: var(--black);
-    }
-
-    .details-black {
-      color: var(--black);
-    }
-
-    .details-teal {
-      color: var(--teal);
+    .jamaat-note {
+      max-width: 850px;
+      margin: 12px auto 0 auto;
+      padding: 12px 14px;
+      background: #fff;
+      color: #333;
+      border-left: 4px solid var(--blue-main);
+      border-radius: 8px;
+      font-weight: normal;
+      line-height: 1.4;
     }
 
     @media (max-width: 980px) {
-      #weekly-export-area {
+      #weekly-export-area, #jamaat-doc-card {
         transform: scale(0.9);
         transform-origin: top center;
         margin-bottom: -40px;
       }
     }
 
-    @media (max-width: 1120px) {
-      #jamaat-export-card {
-        transform: scale(0.75);
-        transform-origin: top center;
-        margin-bottom: -230px;
-      }
-    }
-
     @media (max-width: 760px) {
-      body {
-        padding: 12px;
-      }
-
-      .controls {
-        align-items: stretch;
-      }
-
-      .view-button,
-      .action-button,
-      .date-controls,
-      .date-controls input {
-        width: 100%;
-      }
-
-      .date-controls {
-        justify-content: center;
-      }
-
-      #weekly-export-area {
+      body { padding: 12px; }
+      .controls { align-items: stretch; }
+      .view-button, .action-button, .date-controls, .date-controls input, .jamaat-actions { width: 100%; }
+      .date-controls, .jamaat-actions { justify-content: center; }
+      #weekly-export-area, #jamaat-doc-card {
         transform: scale(0.42);
         transform-origin: top center;
-        margin-bottom: -260px;
-      }
-
-      #jamaat-export-card {
-        transform: scale(0.48);
-        transform-origin: top center;
-        margin-bottom: -430px;
+        margin-bottom: -420px;
       }
     }
   </style>
@@ -347,7 +230,7 @@
 <body>
   <div class="app-header">
     <h1>Tawa Prayer Exporter</h1>
-    <p>Generate PNG images for the weekly timetable or daily Jamaat times.</p>
+    <p>Generate the weekly timetable PNG or view the live Daily Jamaat Times Google Doc.</p>
   </div>
 
   <div class="controls">
@@ -361,6 +244,11 @@
     </div>
 
     <button type="button" class="action-button" id="download-button">Download PNG</button>
+
+    <div class="jamaat-actions hidden" id="jamaat-actions">
+      <a class="action-button" id="open-doc-button" href="https://docs.google.com/document/d/e/2PACX-1vQ_L7_zj_Cj_L76hGMe1310xw_pPPjTfbhtcaGB8Qm0GFm6uOshFdyjQipal-_2s-MRdrWjTLb4qR30/pub" target="_blank" rel="noopener noreferrer">Open Jamaat Document</a>
+      <button type="button" class="action-button secondary-button" id="print-page-button">Print / Save as PDF</button>
+    </div>
   </div>
 
   <div class="status" id="status"></div>
@@ -375,57 +263,15 @@
   </section>
 
   <section class="view" id="jamaat-view">
-    <div id="jamaat-export-card">
-      <h1 class="jamaat-heading">DAILY JAMAAT TIMES</h1>
-
-      <table class="jamaat-table" aria-label="Daily Jamaat Times">
-        <tbody>
-          <tr class="row-tall">
-            <td class="prayer-name name-teal">Fajr</td>
-            <td class="time-details details-black">
-              <div>Adhan: 6:05am</div>
-              <div>Jamaat: 6:15am</div>
-            </td>
-          </tr>
-
-          <tr class="row-tall">
-            <td class="prayer-name name-white">Dhuhr</td>
-            <td class="time-details details-teal">
-              <div>Adhan: 12:30pm</div>
-              <div>Jamaat: 12:40pm</div>
-            </td>
-          </tr>
-
-          <tr class="row-tall">
-            <td class="prayer-name name-teal">Asr</td>
-            <td class="time-details details-black">
-              <div>Adhan: 3:40pm</div>
-              <div>Jamaat: 3:50pm</div>
-            </td>
-          </tr>
-
-          <tr class="row-short">
-            <td class="prayer-name name-white">Maghrib</td>
-            <td class="time-details details-teal">As on timetable</td>
-          </tr>
-
-          <tr class="row-tall">
-            <td class="prayer-name name-teal">Isha</td>
-            <td class="time-details details-black">
-              <div>Adhan: 6:55pm</div>
-              <div>Jamaat: 7:05pm</div>
-            </td>
-          </tr>
-
-          <tr class="row-tall">
-            <td class="prayer-name name-white">Juma</td>
-            <td class="time-details details-teal">
-              <div>Adhan: 12:30pm</div>
-              <div>Kuthbah: 12:40pm</div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div id="jamaat-doc-card">
+      <iframe
+        id="jamaat-doc-frame"
+        src="https://docs.google.com/document/d/e/2PACX-1vQ_L7_zj_Cj_L76hGMe1310xw_pPPjTfbhtcaGB8Qm0GFm6uOshFdyjQipal-_2s-MRdrWjTLb4qR30/pub?embedded=true"
+        title="Daily Jamaat Times">
+      </iframe>
+    </div>
+    <div class="jamaat-note">
+      This view is loaded live from the published Google Doc, so weekly updates made in Google Docs will appear here automatically. Browser security prevents this iframe from being exported by the PNG button, so use a manual screenshot, Open Jamaat Document, or Print / Save as PDF for this view.
     </div>
   </section>
 
@@ -464,12 +310,10 @@
       const params = new URLSearchParams(window.location.search);
       const urlDate = params.get("date");
       const input = document.getElementById("start-date");
-
       if (urlDate) {
         input.value = urlDate;
         return;
       }
-
       const today = new Date();
       const yyyy = today.getFullYear();
       const mm = String(today.getMonth() + 1).padStart(2, "0");
@@ -479,45 +323,39 @@
 
     function showView(viewName) {
       currentView = viewName;
-
-      document.getElementById("weekly-view").classList.toggle("active", viewName === "weekly");
-      document.getElementById("jamaat-view").classList.toggle("active", viewName === "jamaat");
-      document.getElementById("weekly-view-button").classList.toggle("active", viewName === "weekly");
-      document.getElementById("jamaat-view-button").classList.toggle("active", viewName === "jamaat");
-      document.getElementById("weekly-date-controls").classList.toggle("hidden", viewName !== "weekly");
-
-      document.getElementById("status").textContent = viewName === "weekly"
+      const isWeekly = viewName === "weekly";
+      document.getElementById("weekly-view").classList.toggle("active", isWeekly);
+      document.getElementById("jamaat-view").classList.toggle("active", !isWeekly);
+      document.getElementById("weekly-view-button").classList.toggle("active", isWeekly);
+      document.getElementById("jamaat-view-button").classList.toggle("active", !isWeekly);
+      document.getElementById("weekly-date-controls").classList.toggle("hidden", !isWeekly);
+      document.getElementById("download-button").classList.toggle("hidden", !isWeekly);
+      document.getElementById("jamaat-actions").classList.toggle("hidden", isWeekly);
+      document.getElementById("status").textContent = isWeekly
         ? "Weekly timetable selected."
-        : "Daily Jamaat times selected.";
+        : "Daily Jamaat Times live Google Doc selected.";
     }
 
     async function loadWeeklyPrayerTimes() {
       const status = document.getElementById("status");
       const container = document.getElementById("prayer-table-placeholder");
       const selectedDateText = document.getElementById("start-date").value;
-
       if (!selectedDateText) {
         status.textContent = "Please select a start date.";
         return;
       }
-
       const selectedDate = dateOnly(parseLocalDate(selectedDateText));
-
       status.textContent = "Loading weekly prayer times...";
       container.textContent = "Loading weekly prayer times...";
-
       try {
         const res = await fetch(sheetUrl);
         if (!res.ok) throw new Error(`Google Sheet request failed: ${res.status}`);
-
         const text = await res.text();
         const jsonStart = text.indexOf("{");
         const jsonEnd = text.lastIndexOf("}");
         if (jsonStart === -1 || jsonEnd === -1) throw new Error("Could not parse Google Sheet response.");
-
         const json = JSON.parse(text.substring(jsonStart, jsonEnd + 1));
         const rows = json.table.rows || [];
-
         const parsedRows = rows
           .map(row => {
             const dateCell = row.c[0];
@@ -525,50 +363,26 @@
             const dateStr = dateCell.f || dateCell.v;
             const date = parseSheetDate(dateStr);
             if (isNaN(date.getTime())) return null;
-            return {
-              date,
-              dateStr,
-              times: row.c.slice(1, 7).map(formatTime)
-            };
+            return { date, times: row.c.slice(1, 7).map(formatTime) };
           })
           .filter(row => row && dateOnly(row.date) >= selectedDate)
           .sort((a, b) => a.date - b.date);
-
         const next7 = parsedRows.slice(0, 7);
-
         if (next7.length === 0) {
           container.textContent = "No prayer times found for that date.";
           status.textContent = "No matching rows found in the Google Sheet.";
           return;
         }
-
         const table = document.createElement("table");
         const thead = document.createElement("thead");
-        thead.innerHTML = `
-          <tr>
-            <th>Date</th>
-            <th>Fajr</th>
-            <th>Sunrise</th>
-            <th>Dhuhr</th>
-            <th>Asr</th>
-            <th>Maghrib</th>
-            <th>Isha</th>
-          </tr>
-        `;
-
+        thead.innerHTML = `<tr><th>Date</th><th>Fajr</th><th>Sunrise</th><th>Dhuhr</th><th>Asr</th><th>Maghrib</th><th>Isha</th></tr>`;
         const tbody = document.createElement("tbody");
         next7.forEach(row => {
           const tr = document.createElement("tr");
-          if (dateOnly(row.date).getTime() === selectedDate.getTime()) {
-            tr.classList.add("highlight-row");
-          }
-          tr.innerHTML = `
-            <td>${formatDisplayDate(row.date)}</td>
-            ${row.times.map(time => `<td>${time}</td>`).join("")}
-          `;
+          if (dateOnly(row.date).getTime() === selectedDate.getTime()) tr.classList.add("highlight-row");
+          tr.innerHTML = `<td>${formatDisplayDate(row.date)}</td>${row.times.map(time => `<td>${time}</td>`).join("")}`;
           tbody.appendChild(tr);
         });
-
         table.appendChild(thead);
         table.appendChild(tbody);
         container.innerHTML = "";
@@ -581,58 +395,27 @@
       }
     }
 
-    async function downloadPng() {
+    async function downloadWeeklyPng() {
       const status = document.getElementById("status");
-
       try {
-        if (typeof html2canvas === "undefined") {
-          throw new Error("html2canvas did not load. Check your internet connection or CDN access.");
-        }
-
-        let target;
-        let fileName;
-        let backgroundColor;
-
-        if (currentView === "weekly") {
-          const selectedDateText = document.getElementById("start-date").value || "selected-date";
-          target = document.querySelector("#weekly-prayer-table table");
-          fileName = `tawa-prayer-times-${selectedDateText}.png`;
-          backgroundColor = null;
-        } else {
-          target = document.getElementById("jamaat-export-card");
-          fileName = "daily-jamaat-times.png";
-          backgroundColor = "#ffffff";
-        }
-
-        if (!target) throw new Error("No export target found.");
-
+        if (typeof html2canvas === "undefined") throw new Error("html2canvas did not load.");
+        const selectedDateText = document.getElementById("start-date").value || "selected-date";
+        const target = document.querySelector("#weekly-prayer-table table");
+        if (!target) throw new Error("No weekly timetable table found.");
         status.textContent = "Generating PNG...";
-
-        const previousTransform = target.style.transform;
-        const previousMarginBottom = target.style.marginBottom;
-        target.style.transform = "none";
-        target.style.marginBottom = "0";
-
-        await new Promise(resolve => setTimeout(resolve, 100));
-
         const canvas = await html2canvas(target, {
-          backgroundColor,
+          backgroundColor: null,
           scale: 2,
           useCORS: true,
           logging: false
         });
-
-        target.style.transform = previousTransform;
-        target.style.marginBottom = previousMarginBottom;
-
         const link = document.createElement("a");
-        link.download = fileName;
+        link.download = `tawa-prayer-times-${selectedDateText}.png`;
         link.href = canvas.toDataURL("image/png");
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-
-        status.textContent = `Downloaded ${fileName}.`;
+        status.textContent = `Downloaded tawa-prayer-times-${selectedDateText}.png.`;
       } catch (error) {
         console.error(error);
         status.textContent = "Failed to generate PNG. Open the browser console for details.";
@@ -643,15 +426,13 @@
     window.addEventListener("load", () => {
       setDefaultDateFromUrlOrToday();
       loadWeeklyPrayerTimes();
-
       const params = new URLSearchParams(window.location.search);
-      const view = params.get("view");
-      showView(view === "jamaat" ? "jamaat" : "weekly");
-
+      showView(params.get("view") === "jamaat" ? "jamaat" : "weekly");
       document.getElementById("weekly-view-button").addEventListener("click", () => showView("weekly"));
       document.getElementById("jamaat-view-button").addEventListener("click", () => showView("jamaat"));
       document.getElementById("generate-weekly-button").addEventListener("click", loadWeeklyPrayerTimes);
-      document.getElementById("download-button").addEventListener("click", downloadPng);
+      document.getElementById("download-button").addEventListener("click", downloadWeeklyPng);
+      document.getElementById("print-page-button").addEventListener("click", () => window.print());
     });
   </script>
 </body>
